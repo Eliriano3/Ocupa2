@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Ocupa2",
+    "slug": "ocupa2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "ocupa2",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.itla.ocupa2"
+    },
+    "android": {
+      "package": "com.itla.ocupa2",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ocupa2 necesita acceso a tus fotos para adjuntar imágenes a tus ofertas, experiencias y contratos.",
+          "cameraPermission": "Ocupa2 necesita acceso a la cámara para tomar fotos de tus ofertas, experiencias y contratos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Ocupa2 usa tu ubicación para mostrar y publicar ofertas de empleo cercanas."
+        }
+      ],
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B3C7A"
+        }
+      ]
+    ]
+  }
+}
