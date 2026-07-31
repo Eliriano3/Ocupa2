@@ -7,5 +7,5 @@ export type ContractsStackParamList = {
   MyContracts: undefined;
   ContractDetail: { contractId: string };
   ApplicantsList: { offerId: string };
-  ApplicantDetail: { applicationId: string };
+  ApplicantDetail: { offerId: string; applicationId: string };
 };
