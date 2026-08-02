@@ -48,3 +48,6 @@ yarn-error.*
 
 #Ignore cursor AI rules
 .cursor/rules/codacy.mdc
+
+# Tareas
+divison-tareas.md
