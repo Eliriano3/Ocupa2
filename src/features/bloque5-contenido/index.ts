@@ -1,4 +1,7 @@
-/** Bloque 5 · Contenido, foro y perfil — Katerin Cordero Cubilete · 2024-1575. */
+/*
+ * Exportaciones principales del módulo de contenido.
+ * Centraliza navegadores y tipos utilizados por las diferentes secciones.
+ */
 
 export { ContentNavigator, PublicContentNavigator } from './navigation/ContentNavigator';
 export type {
