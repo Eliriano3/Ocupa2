@@ -81,7 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearLocalSession = useCallback(async () => {
     currentToken = null;
-    await clearSession();
+    try {
+      await clearSession();
+    } catch {
+      // Si el almacenamiento falla al borrar, la sesión en memoria se cierra
+      // igual: nunca dejamos al usuario atrapado dentro de la app.
+    }
     if (!mounted.current) return;
     setTokenState(null);
     setUser(null);

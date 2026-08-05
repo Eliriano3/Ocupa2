@@ -3,10 +3,10 @@
  */
 
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { AppButton, AppInput, ErrorMessage, Screen } from '@/components';
+import { AppButton, AppInput, ConfirmDialog, ErrorMessage, Screen } from '@/components';
 import { useForm } from '@/hooks';
 import { useAuth } from '@/store';
 import { colors, fontSize, spacing } from '@/theme';
@@ -19,6 +19,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
   const { changePassword } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [saved, setSaved] = useState(false);
 
   const form = useForm({
     initialValues: { password: '', confirmPassword: '' },
@@ -40,9 +41,7 @@ export default function ChangePasswordScreen({ navigation }: Props) {
     setSubmitting(true);
     try {
       await changePassword(form.values.password);
-      Alert.alert('Clave actualizada', 'Tu clave se cambió correctamente.', [
-        { text: 'Entendido', onPress: () => navigation.goBack() },
-      ]);
+      setSaved(true);
     } catch (caught) {
       setError(caught);
     } finally {
@@ -83,6 +82,17 @@ export default function ChangePasswordScreen({ navigation }: Props) {
       />
 
       <AppButton title="Guardar clave" onPress={submit} loading={submitting} />
+
+      <ConfirmDialog
+        visible={saved}
+        title="Clave actualizada"
+        message="Tu clave se cambió correctamente."
+        confirmLabel="Entendido"
+        onConfirm={() => {
+          setSaved(false);
+          navigation.goBack();
+        }}
+      />
     </Screen>
   );
 }
