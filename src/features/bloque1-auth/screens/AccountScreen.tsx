@@ -6,11 +6,11 @@
  */
 
 import { useCallback, useState } from 'react';
-import { Alert, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { AppButton, Card, ErrorMessage, Loader, Screen } from '@/components';
+import { AppButton, Card, ConfirmDialog, ErrorMessage, Loader, Screen } from '@/components';
 import { useAuth } from '@/store';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import type { AccountStackParamList } from '../navigation/types';
@@ -21,6 +21,7 @@ export default function AccountScreen({ navigation }: Props) {
   const { user, logout, refreshProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [askingLogout, setAskingLogout] = useState(false);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -35,10 +36,8 @@ export default function AccountScreen({ navigation }: Props) {
   }, [refreshProfile]);
 
   const confirmLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Seguro que quieres salir de tu cuenta?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Cerrar sesión', style: 'destructive', onPress: () => void logout() },
-    ]);
+    setAskingLogout(false);
+    void logout();
   };
 
   if (!user) return <Loader message="Cargando tu cuenta…" />;
@@ -79,8 +78,18 @@ export default function AccountScreen({ navigation }: Props) {
       <AppButton
         title="Cerrar sesión"
         variant="danger"
-        onPress={confirmLogout}
+        onPress={() => setAskingLogout(true)}
         style={styles.spaced}
+      />
+
+      <ConfirmDialog
+        visible={askingLogout}
+        title="Cerrar sesión"
+        message="¿Seguro que quieres salir de tu cuenta?"
+        confirmLabel="Cerrar sesión"
+        destructive
+        onConfirm={confirmLogout}
+        onCancel={() => setAskingLogout(false)}
       />
 
       <View style={styles.note}>

@@ -14,7 +14,7 @@
  * `ApiError` (fallo del API): muéstralos con `<ErrorMessage />`.
  */
 
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import { MAX_UPLOAD_BYTES } from '@/api/config';
@@ -144,8 +144,16 @@ export async function pickImageFromLibrary(
   return toPickedImage(result.assets[0]);
 }
 
-/** Pregunta al usuario si quiere cámara o galería. `null` si cancela. */
+/**
+ * Pregunta al usuario si quiere cámara o galería. `null` si cancela.
+ *
+ * En web no hay un diálogo de tres opciones (`Alert` con botones no existe en
+ * react-native-web), así que se va directo a la galería: el navegador abre su
+ * propio selector de archivos.
+ */
 export function askImageSource(title = 'Agregar foto'): Promise<ImageSource | null> {
+  if (Platform.OS === 'web') return Promise.resolve('library');
+
   return new Promise((resolve) => {
     Alert.alert(title, '¿De dónde quieres tomar la imagen?', [
       { text: 'Cámara', onPress: () => resolve('camera') },

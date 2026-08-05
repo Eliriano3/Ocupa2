@@ -16,6 +16,9 @@ export type { AppInputProps } from './AppInput';
 export { Card } from './Card';
 export type { CardProps } from './Card';
 
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogProps } from './ConfirmDialog';
+
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
 
