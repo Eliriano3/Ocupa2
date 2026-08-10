@@ -8,7 +8,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -22,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { applicationsApi } from '@/api';
 import type { ApplicationStatus } from '@/api';
-import { AppButton, Card, ErrorMessage, Loader, Screen } from '@/components';
+import { AppButton, Card, ConfirmDialog, ErrorMessage, Loader, Screen } from '@/components';
 import { useAsyncData } from '@/hooks';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import type { ContractsStackParamList } from '../navigation/types';
@@ -113,6 +112,18 @@ export default function ApplicantDetailScreen() {
   const [actionError, setActionError] = useState<unknown>(null);
   const [localRating, setLocalRating] = useState<number>(0);
 
+  // Dialog state (replaces Alert.alert)
+  const [dialog, setDialog] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    destructive?: boolean;
+    onConfirm: () => void;
+    onCancel?: () => void;
+  }>({ visible: false, title: '', onConfirm: () => {} });
+
   // Fetch all applications for the offer and find the one we need.
   // There's no single-application endpoint in the API.
   const { data: applications, loading, error, reload, refreshing, refresh } =
@@ -152,50 +163,49 @@ export default function ApplicantDetailScreen() {
 
   const handleStatusChange = useCallback(
     (newStatus: ApplicationStatus, label: string) => {
-      Alert.alert(
-        `¿${label}?`,
-        newStatus === 'winner'
-          ? 'Al elegir como ganador se crea un contrato automáticamente. ¿Continuar?'
-          : `¿Estás seguro de que quieres ${label.toLowerCase()} a este aplicante?`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Confirmar',
-            style: newStatus === 'discarded' ? 'destructive' : 'default',
-            onPress: async () => {
-              setActionError(null);
-              setSubmitting(newStatus);
-              try {
-                const updated = await applicationsApi.updateApplication(
-                  applicationId,
-                  { status: newStatus },
-                );
-                await reload();
-                if (newStatus === 'winner' && updated.contractId) {
-                  Alert.alert(
-                    '¡Ganador elegido!',
-                    'Se creó el contrato automáticamente. ¿Quieres verlo?',
-                    [
-                      { text: 'Más tarde' },
-                      {
-                        text: 'Ver contrato',
-                        onPress: () =>
-                          navigation.navigate('ContractDetail', {
-                            contractId: updated.contractId!,
-                          }),
-                      },
-                    ],
-                  );
-                }
-              } catch (err) {
-                setActionError(err);
-              } finally {
-                setSubmitting(null);
-              }
-            },
-          },
-        ],
-      );
+      setDialog({
+        visible: true,
+        title: `¿${label}?`,
+        message:
+          newStatus === 'winner'
+            ? 'Al elegir como ganador se crea un contrato automáticamente. ¿Continuar?'
+            : `¿Estás seguro de que quieres ${label.toLowerCase()} a este aplicante?`,
+        confirmLabel: 'Confirmar',
+        destructive: newStatus === 'discarded',
+        onConfirm: async () => {
+          setDialog((d) => ({ ...d, visible: false }));
+          setActionError(null);
+          setSubmitting(newStatus);
+          try {
+            const updated = await applicationsApi.updateApplication(
+              applicationId,
+              { status: newStatus },
+            );
+            await reload();
+            if (newStatus === 'winner' && updated.contractId) {
+              setDialog({
+                visible: true,
+                title: '¡Ganador elegido!',
+                message: 'Se creó el contrato automáticamente. ¿Quieres verlo?',
+                confirmLabel: 'Ver contrato',
+                cancelLabel: 'Más tarde',
+                onConfirm: () => {
+                  setDialog((d) => ({ ...d, visible: false }));
+                  navigation.navigate('ContractDetail', {
+                    contractId: updated.contractId!,
+                  });
+                },
+                onCancel: () => setDialog((d) => ({ ...d, visible: false })),
+              });
+            }
+          } catch (err) {
+            setActionError(err);
+          } finally {
+            setSubmitting(null);
+          }
+        },
+        onCancel: () => setDialog((d) => ({ ...d, visible: false })),
+      });
     },
     [applicationId, reload, navigation],
   );
@@ -364,6 +374,17 @@ export default function ApplicantDetailScreen() {
             })
           : '—'}
       </Text>
+
+      <ConfirmDialog
+        visible={dialog.visible}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        cancelLabel={dialog.cancelLabel}
+        destructive={dialog.destructive}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+      />
     </Screen>
   );
 }
