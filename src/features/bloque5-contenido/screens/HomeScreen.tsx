@@ -7,7 +7,7 @@ import { useAuth } from '@/store';
 import MenuCard from '../componente5/MenuCard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -35,8 +35,6 @@ interface Slide {
   message: string;
 }
 
-// TODO(Bloque 5): reemplazar por imágenes reales del proyecto
-// (puedes moverlas a src/assets/home/ y usar require('../../../assets/home/slide-1.png')).
 const SLIDES: Slide[] = [
   {
     id: '1',
@@ -79,8 +77,6 @@ export default function HomeScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const autoPlayTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  //prueba: const isAuthenticated = true;
-
   const startAutoPlay = useCallback(() => {
     if (autoPlayTimer.current) clearInterval(autoPlayTimer.current);
     autoPlayTimer.current = setInterval(() => {
@@ -92,11 +88,16 @@ export default function HomeScreen() {
     }, AUTO_PLAY_MS);
   }, []);
 
-  // Arranca el auto-avance al montar la pantalla.
-  useState(() => {
+  // Arranca el auto-avance al montar la pantalla y lo limpia al salir.
+  useEffect(() => {
     startAutoPlay();
-    return undefined;
-  });
+
+    return () => {
+      if (autoPlayTimer.current) {
+        clearInterval(autoPlayTimer.current);
+      }
+    };
+  }, [startAutoPlay]);
 
   const handleScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -148,7 +149,6 @@ export default function HomeScreen() {
           explora las oportunidades que otros usuarios han dejado disponibles.
         </Text>
 
-        {/*el boton de explorar, con esto si esta logeado' mandara a la pesta;a de Rosme, if that is false entonces al login*/}
         <View style={styles.exploreButton}>
           <AppButton
             title="Explorar ofertas"
@@ -163,24 +163,6 @@ export default function HomeScreen() {
 
         </View>
         <View style={styles.actions}>
-          {/*
-            TODO(Bloque 5): confirmar con Eduardo/Rosmeris:
-            1) el hook/contexto real de sesión en src/store (¿useAuth()? ¿qué
-               devuelve: token, isAuthenticated, user?)
-            2) el nombre de la ruta de Login en el navegador raíz
-            3) el nombre de la ruta de Explorar (Bloque 4) en el navegador raíz
-            Con eso, reemplaza el onPress de abajo por algo como:
- 
-            const { isAuthenticated } = useAuth();
-            ...
-            onPress={() =>
-              isAuthenticated
-                ? navigation.getParent()?.navigate('Explorar' as never)
-                : navigation.getParent()?.navigate('Login' as never)
-            }
-                          />
-          */}
-
 
           <MenuCard
             icon="newspaper-outline"
@@ -220,7 +202,7 @@ export default function HomeScreen() {
               title="Acerca de"
               onPress={() => navigation.navigate('About')}
             />
-             </View>
+          </View>
         </View>
       </View>
     </Screen>
@@ -308,14 +290,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
-  /*aboutCard: {
-     alignItems: 'center',
-     marginTop: spacing.md,
-   },*/
   aboutCard: {
     width: '100%',
     alignItems: 'center',
-
-
   },
 });
