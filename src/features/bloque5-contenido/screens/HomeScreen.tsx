@@ -82,7 +82,10 @@ export default function HomeScreen() {
     autoPlayTimer.current = setInterval(() => {
       setActiveIndex((current) => {
         const next = (current + 1) % SLIDES.length;
-        listRef.current?.scrollToIndex({ index: next, animated: true });
+        listRef.current?.scrollToOffset({
+          offset: next * SCREEN_WIDTH,
+          animated: true,
+        });
         return next;
       });
     }, AUTO_PLAY_MS);
