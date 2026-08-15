@@ -24,8 +24,7 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
@@ -60,12 +59,6 @@
           "backgroundColor": "#0B3C7A"
         }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "ebb0babb-e037-42ab-9590-09df053ee06d"
-      }
-    },
-    "owner": "romanqwerty"
+    ]
   }
 }

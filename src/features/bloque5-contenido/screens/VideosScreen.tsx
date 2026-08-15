@@ -19,22 +19,21 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-//import { WebView } from 'react-native-webview';
- 
+
 import { contentApi } from '@/api';
 import type { Video } from '@/api/types';
 import { AppButton, Card, EmptyState, Loader, Screen } from '@/components';
 import { colors, fontSize, radius, spacing } from '@/theme';
- 
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const PLAYER_HEIGHT = (SCREEN_WIDTH * 9) / 16;
- 
+
 function thumbnailFor(video: Video): string | null {
   if (video.thumbnail) return video.thumbnail;
   if (video.youtubeId) return `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`;
   return null;
 }
- 
+
 export default function VideosScreen() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,12 +42,12 @@ export default function VideosScreen() {
   const [playing, setPlaying] = useState<Video | null>(null);
   const [playerError, setPlayerError] = useState<string | null>(null);
   const [playerLoading, setPlayerLoading] = useState(false);
- 
+
   const loadVideos = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     setErrorMessage(null);
- 
+
     try {
       const data = await contentApi.getVideos();
       const sorted = [...data].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
@@ -62,11 +61,11 @@ export default function VideosScreen() {
       else setLoading(false);
     }
   }, []);
- 
+
   useEffect(() => {
     loadVideos();
   }, [loadVideos]);
- 
+
   if (loading) {
     return (
       <Screen>
@@ -74,7 +73,7 @@ export default function VideosScreen() {
       </Screen>
     );
   }
- 
+
   if (errorMessage) {
     return (
       <Screen>
@@ -88,46 +87,42 @@ export default function VideosScreen() {
       </Screen>
     );
   }
- 
+
   return (
     <Screen padded={false}>
-{playing && playing.youtubeId ? (
-  <View style={styles.playerWrap}>
-    <YoutubePlayer
-      height={PLAYER_HEIGHT}
-      play={true}
-      videoId={playing.youtubeId}
-    />
+      {playing && playing.youtubeId ? (
+        <View style={styles.playerWrap}>
+          <YoutubePlayer height={PLAYER_HEIGHT} play videoId={playing.youtubeId} />
 
-    <View style={styles.playerFooter}>
-      <Text style={styles.playerTitle} numberOfLines={2}>
-        {playing.title ?? 'Video'}
-      </Text>
+          <View style={styles.playerFooter}>
+            <Text style={styles.playerTitle} numberOfLines={2}>
+              {playing.title ?? 'Video'}
+            </Text>
 
-      <View style={styles.playerActions}>
-        {/*playing.url ? (
-          <AppButton
-            title="Ver en YouTube"
-            variant="secondary"
-            fullWidth={false}
-            onPress={() => Linking.openURL(playing.url!)}
-          />
-        ) : null*/}
+            <View style={styles.playerActions}>
+              {playing.url ? (
+                <AppButton
+                  title="Ver en YouTube"
+                  variant="secondary"
+                  fullWidth={false}
+                  onPress={() => Linking.openURL(playing.url!)}
+                />
+              ) : null}
 
-        <AppButton
-          title="Volver a la lista"
-          variant="ghost"
-          fullWidth={false}
-          onPress={() => {
-            setPlaying(null);
-            setPlayerError(null);
-          }}
-        />
-      </View>
-    </View>
-  </View>
-) : null} 
- 
+              <AppButton
+                title="Volver a la lista"
+                variant="ghost"
+                fullWidth={false}
+                onPress={() => {
+                  setPlaying(null);
+                  setPlayerError(null);
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       <FlatList
         data={videos}
         keyExtractor={(item, index) => item.id ?? item.youtubeId ?? String(index)}
@@ -146,12 +141,7 @@ export default function VideosScreen() {
         renderItem={({ item }) => {
           const thumbnail = thumbnailFor(item);
           return (
-            <Card
-              onPress={() => {
-                console.log('VIDEO:', item);
-                setPlaying(item);
-              }}
-            >
+            <Card onPress={() => setPlaying(item)}>
               <View style={styles.thumbnailWrap}>
                 {thumbnail ? (
                   <Image source={{ uri: thumbnail }} style={styles.thumbnail} resizeMode="cover" />
@@ -177,7 +167,7 @@ export default function VideosScreen() {
     </Screen>
   );
 }
- 
+
 const styles = StyleSheet.create({
   playerWrap: {
     backgroundColor: colors.text,
