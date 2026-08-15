@@ -151,7 +151,16 @@ Ningún paso toca archivos de otro compañero.
   validación de correo, clave de 6 caracteres mínimo y campos requeridos, y mensajes
   claros para 409 (correo ya registrado) y 422 (matrícula no válida).
 
-**Pendiente (Bloques 2 a 5)**
+**Implementado (Bloque 2)**
 
-Las pantallas existen como placeholder: cada una dice a qué bloque pertenece, qué
-endpoints le tocan y qué falta hacer. La lógica todavía no está escrita.
+- Asistente de publicación en cuatro pasos con barra de progreso y pie fijo:
+  detalles (tipo de trabajo, contrato, descripción, pago y los campos personalizados
+  del tipo elegido), ubicación con mapa y GPS, foto obligatoria con fecha límite, y
+  constructor de preguntas para el aplicante.
+- Cobro de US$1 con tarjeta y creación de la oferta en la misma acción. Si el pago
+  sale bien y `POST /offers` falla, el `paymentId` queda guardado y el reintento lo
+  reusa: nunca se cobra dos veces.
+- Confirmación de oferta publicada, "Mis ofertas" con desactivar y "Mis pagos", con
+  esqueletos de carga, estado vacío y mensajes claros para 402, 409 y 422.
+
+Ya no queda ninguna pantalla como `<PlaceholderScreen />`.
