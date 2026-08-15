@@ -11,7 +11,6 @@
 
 import { useCallback, useState } from 'react';
 import {
-  Alert,
   Image,
   RefreshControl,
   StyleSheet,
@@ -28,6 +27,7 @@ import {
   AppButton,
   AppInput,
   Card,
+  ConfirmDialog,
   ErrorMessage,
   Loader,
   Screen,
@@ -35,6 +35,7 @@ import {
 import { useAsyncData } from '@/hooks';
 import { pickAndUploadImage } from '@/services';
 import { colors, fontSize, radius, spacing } from '@/theme';
+import { isoDate } from '@/utils/validation';
 import type { ContractsStackParamList } from '../navigation/types';
 
 type RouteT = RouteProp<ContractsStackParamList, 'ContractDetail'>;
@@ -113,6 +114,36 @@ export default function ContractDetailScreen() {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelJustification, setCancelJustification] = useState('');
 
+  // Dialog state (replaces Alert.alert)
+  const [dialog, setDialog] = useState<{
+    visible: boolean;
+    title: string;
+    message?: string;
+    confirmLabel?: string;
+    destructive?: boolean;
+    onConfirm: () => void;
+    onCancel?: () => void;
+  }>({ visible: false, title: '', onConfirm: () => {} });
+
+  const showAlert = (title: string, message: string) =>
+    setDialog({ visible: true, title, message, confirmLabel: 'Entendido', onConfirm: () => setDialog((d) => ({ ...d, visible: false })) });
+
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    opts?: { confirmLabel?: string; destructive?: boolean },
+  ) =>
+    setDialog({
+      visible: true,
+      title,
+      message,
+      confirmLabel: opts?.confirmLabel ?? 'Confirmar',
+      destructive: opts?.destructive,
+      onConfirm: () => { setDialog((d) => ({ ...d, visible: false })); onConfirm(); },
+      onCancel: () => setDialog((d) => ({ ...d, visible: false })),
+    });
+
   /* ---- Derived state ---- */
   const isContratante = contract?.myRole === 'contratante';
   const isContratado = contract?.myRole === 'contratado';
@@ -149,15 +180,16 @@ export default function ContractDetailScreen() {
   const handleSetTerms = () => {
     const salary = parseFloat(termsSalary);
     if (isNaN(salary) || salary <= 0) {
-      Alert.alert('Error', 'Ingresa un salario válido.');
+      showAlert('Error', 'Ingresa un salario válido.');
       return;
     }
-    if (!termsStartDate.trim()) {
-      Alert.alert('Error', 'La fecha de inicio es requerida (YYYY-MM-DD).');
+    const dateError = isoDate()(termsStartDate.trim());
+    if (!termsStartDate.trim() || dateError) {
+      showAlert('Error', dateError ?? 'La fecha de inicio es requerida (AAAA-MM-DD).');
       return;
     }
     if (!termsDuration.trim()) {
-      Alert.alert('Error', 'La duración es requerida.');
+      showAlert('Error', 'La duración es requerida.');
       return;
     }
     runAction('terms', async () => {
@@ -176,37 +208,24 @@ export default function ContractDetailScreen() {
 
   /* ---- Accept / Reject ---- */
   const handleAccept = () => {
-    Alert.alert(
+    showConfirm(
       'Aceptar contrato',
       '¿Estás seguro de que quieres aceptar este contrato con los términos definidos?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Aceptar',
-          onPress: () =>
-            runAction('accept', async () => {
-              await contractsApi.acceptContract(contractId);
-            }),
-        },
-      ],
+      () => runAction('accept', async () => {
+        await contractsApi.acceptContract(contractId);
+      }),
+      { confirmLabel: 'Aceptar' },
     );
   };
 
   const handleReject = () => {
-    Alert.alert(
+    showConfirm(
       'Rechazar contrato',
       '¿Estás seguro? Esta acción no se puede deshacer.',
-      [
-        { text: 'Volver', style: 'cancel' },
-        {
-          text: 'Rechazar',
-          style: 'destructive',
-          onPress: () =>
-            runAction('reject', async () => {
-              await contractsApi.rejectContract(contractId);
-            }),
-        },
-      ],
+      () => runAction('reject', async () => {
+        await contractsApi.rejectContract(contractId);
+      }),
+      { confirmLabel: 'Rechazar', destructive: true },
     );
   };
 
@@ -235,7 +254,7 @@ export default function ContractDetailScreen() {
 
   const handleSubmitPhoto = () => {
     if (!photoUrl || !photoDesc.trim()) {
-      Alert.alert('Error', 'Agrega una descripción para la foto.');
+      showAlert('Error', 'Agrega una descripción para la foto.');
       return;
     }
     runAction('photo', async () => {
@@ -251,27 +270,20 @@ export default function ContractDetailScreen() {
   /* ---- Cancel ---- */
   const handleCancel = () => {
     if (!cancelJustification.trim()) {
-      Alert.alert('Error', 'La justificación es requerida para cancelar.');
+      showAlert('Error', 'La justificación es requerida para cancelar.');
       return;
     }
-    Alert.alert(
+    showConfirm(
       'Cancelar contrato',
       '¿Estás seguro? Esta acción no se puede deshacer.',
-      [
-        { text: 'Volver', style: 'cancel' },
-        {
-          text: 'Cancelar contrato',
-          style: 'destructive',
-          onPress: () =>
-            runAction('cancel', async () => {
-              await contractsApi.cancelContract(contractId, {
-                justification: cancelJustification.trim(),
-              });
-              setShowCancelForm(false);
-              setCancelJustification('');
-            }),
-        },
-      ],
+      () => runAction('cancel', async () => {
+        await contractsApi.cancelContract(contractId, {
+          justification: cancelJustification.trim(),
+        });
+        setShowCancelForm(false);
+        setCancelJustification('');
+      }),
+      { confirmLabel: 'Cancelar contrato', destructive: true },
     );
   };
 
@@ -736,6 +748,16 @@ export default function ContractDetailScreen() {
       )}
 
       <View style={styles.bottomSpacer} />
+
+      <ConfirmDialog
+        visible={dialog.visible}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        destructive={dialog.destructive}
+        onConfirm={dialog.onConfirm}
+        onCancel={dialog.onCancel}
+      />
     </Screen>
   );
 }

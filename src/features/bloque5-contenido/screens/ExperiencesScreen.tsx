@@ -5,12 +5,12 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { catalogApi, experiencesApi } from '@/api';
 import type { Experience, JobType } from '@/api/types';
-import { AppButton, AppInput, Card, EmptyState, Loader, Screen } from '@/components';
+import { AppButton, AppInput, Card, ConfirmDialog, EmptyState, Loader, Screen } from '@/components';
 import { pickAndUploadImage } from '@/services/imageUpload';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
@@ -27,6 +27,8 @@ export default function ExperiencesScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [selectedJobTypeKey, setSelectedJobTypeKey] = useState<string | null>(null);
@@ -111,31 +113,23 @@ export default function ExperiencesScreen() {
 
   const handleDelete = (experience: Experience) => {
     if (!experience.id) return;
-    Alert.alert(
-      'Eliminar experiencia',
-      `¿Seguro que quieres eliminar "${experience.title ?? 'esta experiencia'}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingId(experience.id!);
-            try {
-              await experiencesApi.deleteExperience(experience.id!);
-              setExperiences((current) => current.filter((item) => item.id !== experience.id));
-            } catch (error) {
-              Alert.alert(
-                'No se pudo eliminar',
-                error instanceof Error ? error.message : 'Intenta de nuevo.',
-              );
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ],
-    );
+    setPendingDelete(experience);
+  };
+
+  const confirmDelete = async () => {
+    const experience = pendingDelete;
+    if (!experience?.id) return;
+
+    setPendingDelete(null);
+    setDeletingId(experience.id);
+    try {
+      await experiencesApi.deleteExperience(experience.id);
+      setExperiences((current) => current.filter((item) => item.id !== experience.id));
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Intenta de nuevo.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) {
@@ -288,6 +282,23 @@ export default function ExperiencesScreen() {
             </View>
           </Card>
         )}
+      />
+
+      <ConfirmDialog
+        visible={pendingDelete !== null}
+        title="Eliminar experiencia"
+        message={`¿Seguro que quieres eliminar "${pendingDelete?.title ?? 'esta experiencia'}"?`}
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
+
+      <ConfirmDialog
+        visible={deleteError !== null}
+        title="No se pudo eliminar"
+        message={deleteError ?? undefined}
+        onConfirm={() => setDeleteError(null)}
       />
     </Screen>
   );

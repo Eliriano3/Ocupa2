@@ -37,7 +37,7 @@ const TEAM: TeamMember[] = [
     matricula: '2023-1017',
     photo: require('../assets/team/eduardo.jpeg'),
     phone: '+18498065752',
-    telegram: '+18498065752',
+    telegram: 'eduardoliri',
   },
   {
     name: 'Josué Fondeur Román',
@@ -58,7 +58,7 @@ const TEAM: TeamMember[] = [
     matricula: '2024-1779',
     photo: require('../assets/team/rosmeris.jpeg'),
     phone: '+18097503599',
-    telegram: '+18097503599',
+    telegram: 'rosmejc',
   },
   {
     name: 'Katerin Cordero Cubilete',
