@@ -29,8 +29,6 @@ import type { ContractsStackParamList } from '../navigation/types';
 type Nav = NativeStackNavigationProp<ContractsStackParamList, 'ApplicantDetail'>;
 type RouteT = RouteProp<ContractsStackParamList, 'ApplicantDetail'>;
 
-/* ---- Helpers ---- */
-
 function statusColor(status?: string): string {
   switch (status) {
     case 'applied':
@@ -60,8 +58,6 @@ function statusLabel(status?: string): string {
       return status ?? '—';
   }
 }
-
-/* ---- Star Rating component ---- */
 
 function StarRating({
   value,
@@ -101,8 +97,6 @@ const starStyles = StyleSheet.create({
   },
 });
 
-/* ---- Screen ---- */
-
 export default function ApplicantDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteT>();
@@ -141,8 +135,6 @@ export default function ApplicantDetailScreen() {
   useEffect(() => {
     if (application?.rating) setLocalRating(application.rating);
   }, [application?.rating]);
-
-  /* ---- Actions ---- */
 
   const handleRate = useCallback(
     async (rating: number) => {
@@ -210,8 +202,6 @@ export default function ApplicantDetailScreen() {
     [applicationId, reload, navigation],
   );
 
-  /* ---- Render ---- */
-
   if (loading) return <Loader message="Cargando aplicante…" />;
   if (error) return <ErrorMessage error={error} onRetry={reload} fullScreen />;
   if (!application) {
@@ -236,7 +226,6 @@ export default function ApplicantDetailScreen() {
         />
       }
     >
-      {/* ---- Applicant header ---- */}
       <View style={styles.header}>
         <Ionicons
           name="person-circle-outline"
@@ -261,7 +250,6 @@ export default function ApplicantDetailScreen() {
         </View>
       </View>
 
-      {/* ---- Comment ---- */}
       <Card>
         <Text style={styles.sectionTitle}>Comentario</Text>
         <Text style={styles.commentText}>
@@ -269,7 +257,6 @@ export default function ApplicantDetailScreen() {
         </Text>
       </Card>
 
-      {/* ---- Answers ---- */}
       {application.answers && application.answers.length > 0 && (
         <Card>
           <Text style={styles.sectionTitle}>Respuestas</Text>
@@ -292,7 +279,6 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Rating ---- */}
       <Card>
         <Text style={styles.sectionTitle}>Calificación</Text>
         <StarRating
@@ -305,10 +291,8 @@ export default function ApplicantDetailScreen() {
         )}
       </Card>
 
-      {/* ---- Action error ---- */}
       {actionError ? <ErrorMessage error={actionError} /> : null}
 
-      {/* ---- Action buttons (only if not resolved) ---- */}
       {!isResolved && (
         <Card>
           <Text style={styles.sectionTitle}>Acciones</Text>
@@ -342,7 +326,6 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Winner → link to contract ---- */}
       {application.status === 'winner' && application.contractId && (
         <Card>
           <View style={styles.winnerInfo}>
@@ -363,7 +346,6 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Date ---- */}
       <Text style={styles.dateText}>
         Aplicó el {formatDate(application.createdAt)}
       </Text>
@@ -381,8 +363,6 @@ export default function ApplicantDetailScreen() {
     </Screen>
   );
 }
-
-/* ---- Styles ---- */
 
 const styles = StyleSheet.create({
   header: {

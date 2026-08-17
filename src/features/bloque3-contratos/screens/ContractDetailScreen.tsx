@@ -132,7 +132,7 @@ export default function ContractDetailScreen() {
     destructive?: boolean;
     onConfirm: () => void;
     onCancel?: () => void;
-  }>({ visible: false, title: '', onConfirm: () => {} });
+  }>({ visible: false, title: '', onConfirm: () => { } });
 
   const showAlert = (title: string, message: string) =>
     setDialog({ visible: true, title, message, confirmLabel: 'Entendido', onConfirm: () => setDialog((d) => ({ ...d, visible: false })) });
@@ -468,11 +468,11 @@ export default function ContractDetailScreen() {
                 >
                   {termsStartDate
                     ? termsStartDate.toLocaleDateString('es-DO', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        timeZone: 'UTC',
-                      })
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      timeZone: 'UTC',
+                    })
                     : 'Seleccionar fecha'}
                 </Text>
               </Pressable>
@@ -482,7 +482,6 @@ export default function ContractDetailScreen() {
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
                   minimumDate={new Date()}
-                  // @ts-expect-error React Native Community types are outdated for onValueChange
                   onValueChange={(e: any, selectedDate: Date) => handleDateChange(e, selectedDate)}
                   onDismiss={() => setShowDatePicker(false)}
                 />
