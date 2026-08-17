@@ -365,14 +365,7 @@ export default function ApplicantDetailScreen() {
 
       {/* ---- Date ---- */}
       <Text style={styles.dateText}>
-        Aplicó el{' '}
-        {application.createdAt
-          ? new Date(application.createdAt).toLocaleDateString('es-DO', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })
-          : '—'}
+        Aplicó el {formatDate(application.createdAt)}
       </Text>
 
       <ConfirmDialog

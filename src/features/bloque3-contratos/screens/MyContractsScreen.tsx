@@ -72,6 +72,17 @@ function roleLabel(role?: string): string {
       : (role ?? '—');
 }
 
+/** Formats ISO dates ignoring local timezone shifts */
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('es-DO', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /* ---- Screen ---- */
 
 export default function MyContractsScreen() {
@@ -127,14 +138,12 @@ export default function MyContractsScreen() {
         {item.startDate && (
           <View style={styles.cardRow}>
             <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
-            <Text style={styles.cardValue}>{item.startDate}</Text>
+            <Text style={styles.cardValue}>{formatDate(item.startDate)}</Text>
           </View>
         )}
 
         <Text style={styles.date}>
-          {item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString('es-DO')
-            : ''}
+          {item.createdAt ? formatDate(item.createdAt) : ''}
         </Text>
       </Card>
     ),
