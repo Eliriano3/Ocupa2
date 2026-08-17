@@ -25,6 +25,7 @@ import { AppButton, Card, ConfirmDialog, ErrorMessage, Loader, Screen } from '@/
 import { useAsyncData } from '@/hooks';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import type { ContractsStackParamList } from '../navigation/types';
+import { formatDate } from '@/features/bloque2-publicar/utils';
 
 type Nav = NativeStackNavigationProp<ContractsStackParamList, 'ApplicantDetail'>;
 type RouteT = RouteProp<ContractsStackParamList, 'ApplicantDetail'>;
@@ -116,7 +117,7 @@ export default function ApplicantDetailScreen() {
     destructive?: boolean;
     onConfirm: () => void;
     onCancel?: () => void;
-  }>({ visible: false, title: '', onConfirm: () => {} });
+  }>({ visible: false, title: '', onConfirm: () => { } });
 
   // Fetch all applications for the offer and find the one we need.
   // There's no single-application endpoint in the API.
