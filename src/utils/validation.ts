@@ -12,6 +12,9 @@ export type Validator = (value: string) => string | undefined;
 /** Clave mínima que exige el API (`minLength: 6` en el spec). */
 export const MIN_PASSWORD_LENGTH = 6;
 
+/** Dígitos que tiene una cédula dominicana. */
+export const CEDULA_LENGTH = 11;
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function required(message = 'Este campo es obligatorio'): Validator {
@@ -68,6 +71,39 @@ export function isoDate(message = 'Usa el formato AAAA-MM-DD'): Validator {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return message;
     const date = new Date(`${trimmed}T00:00:00`);
     return Number.isNaN(date.getTime()) ? message : undefined;
+  };
+}
+
+/** Deja solo los dígitos: la cédula se escribe con guiones pero se manda sin ellos. */
+export function onlyDigits(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
+/**
+ * Cédula dominicana: 11 dígitos. El API ignora guiones y espacios, así que
+ * aquí también se aceptan y se descartan antes de contar.
+ */
+export function cedula(message = 'La cédula debe tener 11 dígitos'): Validator {
+  return (value) => {
+    const digits = onlyDigits(value);
+    if (digits.length === 0) return undefined; // lo cubre `required`
+    return digits.length === CEDULA_LENGTH ? undefined : message;
+  };
+}
+
+/** Fecha `YYYY-MM-DD` que no puede estar en el futuro. */
+export function pastDate(message = 'La fecha no puede ser futura'): Validator {
+  return (value) => {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) return undefined;
+
+    const formatError = isoDate()(trimmed);
+    if (formatError) return formatError;
+
+    const date = new Date(`${trimmed}T00:00:00`);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date > today ? message : undefined;
   };
 }
 

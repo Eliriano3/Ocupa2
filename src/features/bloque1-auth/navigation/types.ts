@@ -13,4 +13,14 @@ export type AuthStackParamList = {
 export type AccountStackParamList = {
   Account: undefined;
   ChangePassword: undefined;
+  CompleteProfile: undefined;
+};
+
+/**
+ * Stack que se muestra cuando la cuenta existe pero le falta el perfil
+ * (cédula, género y fecha de nacimiento). Solo tiene esa pantalla: hasta que
+ * se complete, el API no deja publicar.
+ */
+export type ProfileSetupStackParamList = {
+  CompleteProfile: undefined;
 };

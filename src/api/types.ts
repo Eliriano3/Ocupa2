@@ -53,6 +53,10 @@ export type ContractRole = (typeof CONTRACT_ROLES)[number];
 export const CONTRACT_FILTER_STATUSES = ['active', 'inactive'] as const;
 export type ContractFilterStatus = (typeof CONTRACT_FILTER_STATUSES)[number];
 
+/** `User.gender` y `PUT /me/profile` → `gender`. */
+export const GENDERS = ['masculino', 'femenino', 'otro'] as const;
+export type Gender = (typeof GENDERS)[number];
+
 /* ------------------------------------------------------------------ *
  * components/schemas
  * ------------------------------------------------------------------ */
@@ -65,6 +69,12 @@ export interface User {
   lastName?: string;
   /** Nombre completo. */
   nombre?: string;
+  /** 11 dígitos. Se completa en el perfil, no en el registro. */
+  cedula?: string;
+  gender?: Gender;
+  birthDate?: string;
+  /** `true` cuando ya completó cédula, género y fecha de nacimiento. */
+  profileCompleted?: boolean;
   /** Matrícula de referido con la que se creó la cuenta. */
   referralMatricula?: string;
   role?: string;

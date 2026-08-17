@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, ErrorMessage } from '@/components';
@@ -19,9 +19,76 @@ export default function OffersMapScreen() {
 
   const { data: offers, loading, error, refresh } = useAsyncData(fetchOffers, [fetchOffers]);
 
-  const offersWithLocation = offers?.filter(
-    (offer) => offer.location && offer.location.lat && offer.location.lng
-  );
+  const offersWithLocation = useMemo(() => {
+    return offers?.filter(
+      (offer) => offer.location && offer.location.lat && offer.location.lng
+    ) || [];
+  }, [offers]);
+
+  const html = useMemo(() => {
+    if (!offers) return '';
+
+    // Santo Domingo por defecto
+    let centerLat = 18.4861;
+    let centerLng = -69.9312;
+
+    if (offersWithLocation.length > 0) {
+      centerLat = offersWithLocation[0].location!.lat;
+      centerLng = offersWithLocation[0].location!.lng;
+    }
+
+    const markers = offersWithLocation
+      .map((o) => {
+        const title = (o.jobTypeName || o.jobTypeKey || 'Trabajo').replace(/'/g, "\\'");
+        const contract = (o.contractType || '').replace(/'/g, "\\'");
+        const amount = o.payment?.amount || 0;
+        const currency = (o.payment?.currency || '').replace(/'/g, "\\'");
+        const id = o.id || '';
+
+        return `
+          var marker = L.marker([${o.location!.lat}, ${o.location!.lng}]).addTo(map);
+          marker.bindPopup('<div style="font-family: sans-serif; padding: 4px; min-width: 140px;"><b style="font-size: 14px; display: block; margin-bottom: 4px;">${title}</b><span style="color: #666; font-size: 12px; display: block; margin-bottom: 4px;">${contract}</span><span style="color: #1E8E5A; font-weight: bold; font-size: 12px; display: block; margin-bottom: 8px;">${amount} ${currency}</span><button style="width: 100%; padding: 8px; background-color: #0B3C7A; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;" onclick="window.ReactNativeWebView.postMessage(\\'${id}\\')">Ver detalle</button></div>');
+        `;
+      })
+      .join('\n');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+          body { padding: 0; margin: 0; }
+          #map { height: 100vh; width: 100vw; }
+          .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            padding: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script>
+          var map = L.map('map').setView([${centerLat}, ${centerLng}], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+          ${markers}
+        </script>
+      </body>
+      </html>
+    `;
+  }, [offers, offersWithLocation]);
+
+  const handleMessage = (event: any) => {
+    const offerId = event.nativeEvent.data;
+    if (offerId) {
+      navigation.navigate('OfferDetail', { offerId });
+    }
+  };
 
   if (error) {
     return (
@@ -33,37 +100,18 @@ export default function OffersMapScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
-        style={StyleSheet.absoluteFill}
-        initialRegion={{
-          latitude: 18.4861, // Santo Domingo por defecto
-          longitude: -69.9312,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      >
-        {offersWithLocation?.map((offer) => (
-          <Marker
-            key={offer.id!}
-            coordinate={{
-              latitude: offer.location!.lat,
-              longitude: offer.location!.lng,
-            }}
-          >
-            <Callout onPress={() => navigation.navigate('OfferDetail', { offerId: offer.id! })}>
-              <View style={styles.calloutContainer}>
-                <Text style={styles.calloutTitle}>{offer.jobTypeName || offer.jobTypeKey}</Text>
-                <Text style={styles.calloutSubtitle}>{offer.contractType}</Text>
-                <Text style={styles.calloutAction}>Tocar para ver detalle</Text>
-              </View>
-            </Callout>
-          </Marker>
-        ))}
-      </MapView>
+      {html ? (
+        <WebView
+          originWhitelist={['*']}
+          source={{ html }}
+          style={StyleSheet.absoluteFill}
+          onMessage={handleMessage}
+        />
+      ) : null}
 
       {loading && !offers && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#0B3C7A" />
         </View>
       )}
     </View>
@@ -73,6 +121,7 @@ export default function OffersMapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -84,23 +133,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  calloutContainer: {
-    padding: 8,
-    minWidth: 150,
-  },
-  calloutTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  calloutSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  calloutAction: {
-    fontSize: 12,
-    color: '#0066cc',
-    textAlign: 'center',
-  },
 });
+

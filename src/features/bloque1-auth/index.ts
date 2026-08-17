@@ -2,4 +2,9 @@
 
 export { AuthNavigator } from './navigation/AuthNavigator';
 export { AccountNavigator } from './navigation/AccountNavigator';
-export type { AccountStackParamList, AuthStackParamList } from './navigation/types';
+export { ProfileSetupNavigator } from './navigation/ProfileSetupNavigator';
+export type {
+  AccountStackParamList,
+  AuthStackParamList,
+  ProfileSetupStackParamList,
+} from './navigation/types';
