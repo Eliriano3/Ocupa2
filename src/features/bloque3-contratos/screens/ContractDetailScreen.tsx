@@ -42,8 +42,6 @@ import type { ContractsStackParamList } from '../navigation/types';
 
 type RouteT = RouteProp<ContractsStackParamList, 'ContractDetail'>;
 
-/* ---- Helpers ---- */
-
 function statusColor(status?: string): string {
   switch (status) {
     case 'active':
@@ -83,8 +81,6 @@ function formatDate(dateStr?: string): string {
   });
 }
 
-/* ---- Screen ---- */
-
 export default function ContractDetailScreen() {
   const route = useRoute<RouteT>();
   const { contractId } = route.params;
@@ -94,8 +90,6 @@ export default function ContractDetailScreen() {
       () => contractsApi.getContract(contractId),
       [contractId],
     );
-
-  /* ---- Form states ---- */
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [actionError, setActionError] = useState<unknown>(null);
 
@@ -158,8 +152,6 @@ export default function ContractDetailScreen() {
       onConfirm: () => { setDialog((d) => ({ ...d, visible: false })); onConfirm(); },
       onCancel: () => setDialog((d) => ({ ...d, visible: false })),
     });
-
-  /* ---- Derived state ---- */
   const isContratante = contract?.myRole === 'contratante';
   const isContratado = contract?.myRole === 'contratado';
   const isPending = contract?.status === 'pending';
@@ -173,8 +165,6 @@ export default function ContractDetailScreen() {
   const canComment = isActive;
   const canAddPhoto = isActive;
   const canCancel = isActive;
-
-  /* ---- Generic action runner ---- */
   const runAction = useCallback(
     async (key: string, action: () => Promise<void>) => {
       setActionError(null);
@@ -190,8 +180,6 @@ export default function ContractDetailScreen() {
     },
     [reload],
   );
-
-  /* ---- Set Terms ---- */
   const handleSetTerms = () => {
     const salary = parseFloat(termsSalary);
     if (isNaN(salary) || salary <= 0) {
@@ -220,8 +208,6 @@ export default function ContractDetailScreen() {
       setTermsDuration('');
     });
   };
-
-  /* ---- Accept / Reject ---- */
   const handleAccept = () => {
     showConfirm(
       'Aceptar contrato',
@@ -243,8 +229,6 @@ export default function ContractDetailScreen() {
       { confirmLabel: 'Rechazar', destructive: true },
     );
   };
-
-  /* ---- Comment ---- */
   const handleComment = () => {
     if (!commentBody.trim()) return;
     runAction('comment', async () => {
@@ -254,8 +238,6 @@ export default function ContractDetailScreen() {
       setCommentBody('');
     });
   };
-
-  /* ---- Photo ---- */
   const handlePickPhoto = async () => {
     try {
       const result = await pickAndUploadImage();
@@ -281,8 +263,6 @@ export default function ContractDetailScreen() {
       setPhotoDesc('');
     });
   };
-
-  /* ---- Cancel ---- */
   const handleCancel = () => {
     if (!cancelJustification.trim()) {
       showAlert('Error', 'La justificación es requerida para cancelar.');
@@ -302,8 +282,6 @@ export default function ContractDetailScreen() {
     );
   };
 
-  /* ---- Render ---- */
-
   if (loading) return <Loader message="Cargando contrato…" />;
   if (error) return <ErrorMessage error={error} onRetry={reload} fullScreen />;
   if (!contract) {
@@ -321,9 +299,6 @@ export default function ContractDetailScreen() {
         />
       }
     >
-      {/* ================================================================ */}
-      {/* STATUS HEADER                                                    */}
-      {/* ================================================================ */}
       <View style={styles.statusHeader}>
         <Text style={styles.jobType}>
           {contract.jobTypeName ?? 'Contrato'}
@@ -347,10 +322,6 @@ export default function ContractDetailScreen() {
           </Text>
         )}
       </View>
-
-      {/* ================================================================ */}
-      {/* PARTIES                                                          */}
-      {/* ================================================================ */}
       <Card>
         <Text style={styles.sectionTitle}>Partes del contrato</Text>
 
@@ -400,10 +371,6 @@ export default function ContractDetailScreen() {
           )}
         </View>
       </Card>
-
-      {/* ================================================================ */}
-      {/* TERMS                                                            */}
-      {/* ================================================================ */}
       <Card>
         <Text style={styles.sectionTitle}>Términos</Text>
 
@@ -443,8 +410,6 @@ export default function ContractDetailScreen() {
               : 'El contratante aún no ha fijado los términos.'}
           </Text>
         )}
-
-        {/* Set Terms button / form (contratante + pending) */}
         {canSetTerms && !showTermsForm && (
           <AppButton
             title={hasTerms ? 'Modificar términos' : 'Fijar términos'}
@@ -568,10 +533,6 @@ export default function ContractDetailScreen() {
           </View>
         )}
       </Card>
-
-      {/* ================================================================ */}
-      {/* PENDING ACTIONS (contratado: accept / reject)                    */}
-      {/* ================================================================ */}
       {isPending && (canAccept || canReject) && (
         <Card>
           <Text style={styles.sectionTitle}>Acciones</Text>
@@ -612,13 +573,7 @@ export default function ContractDetailScreen() {
           </View>
         </Card>
       )}
-
-      {/* ---- Action error ---- */}
       {actionError ? <ErrorMessage error={actionError} /> : null}
-
-      {/* ================================================================ */}
-      {/* COMMENTS                                                         */}
-      {/* ================================================================ */}
       <Card>
         <Text style={styles.sectionTitle}>
           Comentarios
@@ -664,10 +619,6 @@ export default function ContractDetailScreen() {
           </View>
         )}
       </Card>
-
-      {/* ================================================================ */}
-      {/* PHOTOS                                                           */}
-      {/* ================================================================ */}
       <Card>
         <Text style={styles.sectionTitle}>
           Fotos
@@ -742,10 +693,6 @@ export default function ContractDetailScreen() {
           </View>
         )}
       </Card>
-
-      {/* ================================================================ */}
-      {/* CANCELLATION INFO (if already cancelled)                         */}
-      {/* ================================================================ */}
       {contract.status === 'cancelled' && (
         <Card>
           <View style={styles.cancelInfo}>
@@ -772,10 +719,6 @@ export default function ContractDetailScreen() {
           )}
         </Card>
       )}
-
-      {/* ================================================================ */}
-      {/* CANCEL ACTION (if active)                                        */}
-      {/* ================================================================ */}
       {canCancel && !showCancelForm && (
         <AppButton
           title="Cancelar contrato"
@@ -843,8 +786,6 @@ export default function ContractDetailScreen() {
     </Screen>
   );
 }
-
-/* ---- Styles ---- */
 
 const styles = StyleSheet.create({
   /* Status header */
@@ -1164,3 +1105,5 @@ const styles = StyleSheet.create({
     height: spacing.xl,
   },
 });
+
+
