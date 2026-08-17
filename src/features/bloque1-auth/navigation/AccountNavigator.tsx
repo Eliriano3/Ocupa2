@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { defaultStackScreenOptions } from '@/navigation/screenOptions';
 import AccountScreen from '../screens/AccountScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import CompleteProfileScreen from '../screens/CompleteProfileScreen';
 import type { AccountStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AccountStackParamList>();
@@ -16,6 +17,11 @@ export function AccountNavigator() {
   return (
     <Stack.Navigator screenOptions={defaultStackScreenOptions}>
       <Stack.Screen name="Account" component={AccountScreen} options={{ title: 'Mi cuenta' }} />
+      <Stack.Screen
+        name="CompleteProfile"
+        component={CompleteProfileScreen}
+        options={{ title: 'Mis datos' }}
+      />
       <Stack.Screen
         name="ChangePassword"
         component={ChangePasswordScreen}

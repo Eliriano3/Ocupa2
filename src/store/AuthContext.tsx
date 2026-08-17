@@ -23,6 +23,7 @@ import {
 
 import { authApi, configureApiClient, profileApi, type User } from '@/api';
 import type { LoginRequest, RegisterRequest } from '@/api/auth';
+import type { UpdateProfileRequest } from '@/api/profile';
 import { clearSession, loadToken, loadUser, saveToken, saveUser } from '@/services/secureStorage';
 
 /**
@@ -45,12 +46,19 @@ export interface AuthContextValue {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  /**
+   * `true` cuando el API dice que a la cuenta le faltan la cédula, el género o
+   * la fecha de nacimiento. Sin eso el API no deja publicar ofertas.
+   */
+  needsProfile: boolean;
   /** Crea la cuenta y deja la sesión iniciada. */
   register: (input: RegisterRequest) => Promise<User>;
   login: (input: LoginRequest) => Promise<User>;
   logout: () => Promise<void>;
   /** Vuelve a pedir `GET /me` y actualiza el usuario en memoria. */
   refreshProfile: () => Promise<User | null>;
+  /** `PUT /me/profile` — completa cédula, género y fecha de nacimiento. */
+  updateProfile: (input: UpdateProfileRequest) => Promise<User>;
   /** `PUT /me/password`. */
   changePassword: (newPassword: string) => Promise<void>;
 }
@@ -168,6 +176,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return fresh;
   }, []);
 
+  const updateProfile = useCallback(async (input: UpdateProfileRequest) => {
+    const updated = await profileApi.updateProfile(input);
+    if (!mounted.current) return updated;
+    setUser(updated);
+    await saveUser(updated);
+    return updated;
+  }, []);
+
   const changePassword = useCallback(async (newPassword: string) => {
     await profileApi.changePassword({ password: newPassword });
   }, []);
@@ -178,13 +194,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       token,
       isAuthenticated: status === 'authenticated',
+      // Solo se pide el perfil cuando el API dice explícitamente que falta: si
+      // no manda el campo, no se bloquea al usuario.
+      needsProfile: status === 'authenticated' && user?.profileCompleted === false,
       register,
       login,
       logout,
       refreshProfile,
+      updateProfile,
       changePassword,
     }),
-    [status, user, token, register, login, logout, refreshProfile, changePassword],
+    [status, user, token, register, login, logout, refreshProfile, updateProfile, changePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
