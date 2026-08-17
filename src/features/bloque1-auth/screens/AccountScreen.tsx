@@ -10,9 +10,16 @@ import { RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import type { Gender } from '@/api';
 import { AppButton, Card, ConfirmDialog, ErrorMessage, Loader, Screen } from '@/components';
 import { useAuth } from '@/store';
 import { colors, fontSize, radius, spacing } from '@/theme';
+
+const GENDER_LABELS: Record<Gender, string> = {
+  masculino: 'Masculino',
+  femenino: 'Femenino',
+  otro: 'Otro',
+};
 import type { AccountStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<AccountStackParamList, 'Account'>;
@@ -64,15 +71,25 @@ export default function AccountScreen({ navigation }: Props) {
         <Row label="Nombre" value={user.firstName} />
         <Row label="Apellido" value={user.lastName} />
         <Row label="Correo" value={user.email} />
+        <Row label="Cédula" value={formatCedula(user.cedula)} />
+        <Row label="Género" value={user.gender ? GENDER_LABELS[user.gender] : undefined} />
+        <Row label="Fecha de nacimiento" value={user.birthDate?.slice(0, 10)} />
         <Row label="Matrícula de referido" value={user.referralMatricula} />
         <Row label="Rol" value={user.role} />
         <Row label="Último acceso" value={formatDate(user.lastLoginAt)} last />
       </Card>
 
       <AppButton
+        title="Editar mis datos"
+        variant="secondary"
+        onPress={() => navigation.navigate('CompleteProfile')}
+      />
+
+      <AppButton
         title="Cambiar clave"
         variant="secondary"
         onPress={() => navigation.navigate('ChangePassword')}
+        style={styles.spaced}
       />
 
       <AppButton
@@ -110,6 +127,14 @@ function Row({ label, value, last }: { label: string; value?: string; last?: boo
       <Text style={styles.rowValue}>{value?.trim() ? value : '—'}</Text>
     </View>
   );
+}
+
+/** Cédula dominicana con el formato en que se lee: 000-0000000-0. */
+function formatCedula(value?: string): string | undefined {
+  if (!value) return undefined;
+  const digits = value.replace(/\D/g, '');
+  if (digits.length !== 11) return value;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits.slice(10)}`;
 }
 
 function formatDate(value?: string): string | undefined {

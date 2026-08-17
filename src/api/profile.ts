@@ -1,15 +1,31 @@
 /**
- * Perfil — `GET /me`, `PUT /me/password`, `POST /uploads`.
+ * Perfil — `GET /me`, `PUT /me/profile`, `PUT /me/password`, `POST /uploads`.
  *
- * `GET /me` y `PUT /me/password` los usa el Bloque 1.
+ * `GET /me`, `PUT /me/profile` y `PUT /me/password` los usa el Bloque 1.
  * `POST /uploads` lo usan todos los bloques a través de
  * `src/services/imageUpload.ts` (no lo llames directo salvo que ya tengas el base64).
  */
 
 import { api } from './client';
-import type { User } from './types';
+import type { Gender, User } from './types';
 
 /* ------------------------------ Requests ------------------------------ */
+
+/**
+ * `PUT /me/profile` — todos los campos son requeridos.
+ * Son los datos que se piden al iniciar sesión por primera vez.
+ */
+export interface UpdateProfileRequest {
+  /** Mínimo 2 caracteres. */
+  firstName: string;
+  /** Mínimo 2 caracteres. */
+  lastName: string;
+  /** 11 dígitos; el API ignora guiones y espacios. */
+  cedula: string;
+  gender: Gender;
+  /** `YYYY-MM-DD`, no futura. */
+  birthDate: string;
+}
 
 /** `PUT /me/password` */
 export interface ChangePasswordRequest {
@@ -40,6 +56,16 @@ export interface UploadedImage {
 /** Datos de la cuenta autenticada. */
 export function getMe() {
   return api.get<User>('/me');
+}
+
+/**
+ * Completa o actualiza el perfil. Al guardarse con todo válido, la cuenta
+ * queda con `profileCompleted: true`, que es lo que `POST /offers` exige para
+ * dejar publicar.
+ * Errores esperados: 422 (cédula, fecha o género inválidos).
+ */
+export function updateProfile(body: UpdateProfileRequest) {
+  return api.put<User>('/me/profile', body);
 }
 
 /** Cambia la clave de la cuenta autenticada. */

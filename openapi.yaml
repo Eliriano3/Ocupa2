@@ -134,6 +134,31 @@ paths:
       security: [{ bearerAuth: [] }]
       responses:
         "200": { description: Datos de la cuenta }
+  /me/profile:
+    put:
+      tags: [Perfil]
+      summary: Completar / actualizar el perfil (primer inicio de sesión)
+      description: >
+        Completa los datos que se piden en el primer inicio de sesión: cédula,
+        nombre, apellido, género y fecha de nacimiento. Al guardarse con todo
+        válido, la cuenta queda con profileCompleted = true.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, cedula, gender, birthDate]
+              properties:
+                firstName: { type: string, minLength: 2, example: Juan }
+                lastName:  { type: string, minLength: 2, example: Pérez }
+                cedula:    { type: string, description: "11 dígitos (RD); se ignoran guiones/espacios", example: "40212345678" }
+                gender:    { type: string, enum: [masculino, femenino, otro], example: masculino }
+                birthDate: { type: string, format: date, description: Fecha no futura, example: "2004-05-17" }
+      responses:
+        "200": { description: Perfil actualizado (incluye profileCompleted=true) }
+        "422": { description: Datos inválidos (cédula, fecha o género) }
   /me/password:
     put:
       tags: [Perfil]
@@ -766,6 +791,10 @@ components:
         firstName: { type: string }
         lastName: { type: string }
         nombre: { type: string, description: Nombre completo }
+        cedula: { type: string, description: 11 dígitos (se completa en el perfil) }
+        gender: { type: string, enum: [masculino, femenino, otro] }
+        birthDate: { type: string, format: date-time }
+        profileCompleted: { type: boolean, description: true cuando ya completó cédula, género y fecha de nacimiento }
         referralMatricula: { type: string, description: Matrícula de referido con la que se creó la cuenta }
         role: { type: string }
         createdAt: { type: string, format: date-time }

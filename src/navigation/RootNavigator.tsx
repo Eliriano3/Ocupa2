@@ -8,6 +8,7 @@
 import { NavigationContainer, type Theme } from '@react-navigation/native';
 
 import { Loader } from '@/components';
+import { ProfileSetupNavigator } from '@/features/bloque1-auth';
 import { useAuth } from '@/store';
 import { colors } from '@/theme';
 import { GuestTabs, MainTabs } from './MainTabs';
@@ -31,7 +32,7 @@ const navigationTheme: Theme = {
 };
 
 export function RootNavigator() {
-  const { status } = useAuth();
+  const { status, needsProfile } = useAuth();
 
   if (status === 'loading') {
     return <Loader message="Cargando Ocupa2…" />;
@@ -39,7 +40,15 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {status === 'authenticated' ? <MainTabs /> : <GuestTabs />}
+      {status !== 'authenticated' ? (
+        <GuestTabs />
+      ) : needsProfile ? (
+        // Con sesión pero sin cédula, género ni fecha de nacimiento: el API no
+        // deja publicar, así que primero se completa el perfil.
+        <ProfileSetupNavigator />
+      ) : (
+        <MainTabs />
+      )}
     </NavigationContainer>
   );
 }
