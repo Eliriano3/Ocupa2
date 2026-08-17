@@ -172,10 +172,10 @@ export default function MyOffersScreen() {
                 <AppButton
                   title="Ver aplicantes"
                   onPress={() =>
-                    navigation.navigate('ContractsTab' as never, {
+                    (navigation as any).navigate('ContractsTab', {
                       screen: 'ApplicantsList',
                       params: { offerId: item.id },
-                    } as never)
+                    })
                   }
                   fullWidth={false}
                   disabled={working}

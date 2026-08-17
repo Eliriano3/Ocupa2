@@ -19,7 +19,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,9 +101,9 @@ export default function ContractDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [termsDuration, setTermsDuration] = useState('');
 
-  const handleDateChange = (selectedDate: Date) => {
+  const handleDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShowDatePicker(false);
-    setTermsStartDate(selectedDate);
+    if (selectedDate) setTermsStartDate(selectedDate);
   };
 
   /** Formats a Date as YYYY-MM-DD in UTC (what the API expects). */
@@ -204,7 +204,7 @@ export default function ContractDetailScreen() {
       });
       setShowTermsForm(false);
       setTermsSalary('');
-      setTermsStartDate('');
+      setTermsStartDate(null);
       setTermsDuration('');
     });
   };
@@ -482,7 +482,8 @@ export default function ContractDetailScreen() {
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
                   minimumDate={new Date()}
-                  onValueChange={handleDateChange}
+                  // @ts-expect-error React Native Community types are outdated for onValueChange
+                  onValueChange={(e: any, selectedDate: Date) => handleDateChange(e, selectedDate)}
                   onDismiss={() => setShowDatePicker(false)}
                 />
               )}
