@@ -1,7 +1,8 @@
 /**
- * Versión web de `OfferMapPicker`. `react-native-maps` no corre en el
- * navegador, así que aquí se muestra un panel con las coordenadas y el botón
- * para tomarlas del navegador; el ajuste fino se hace en el celular.
+ * Versión web de `OfferMapPicker`. El mapa nativo va dentro de un `WebView`,
+ * que no existe en el navegador, así que aquí se muestra un panel con las
+ * coordenadas y el botón para tomarlas del navegador; el ajuste fino se hace
+ * en el celular.
  *
  * Mismo contrato de props que la versión nativa: quien la usa no cambia nada.
  */
