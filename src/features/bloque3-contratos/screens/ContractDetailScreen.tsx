@@ -12,11 +12,14 @@
 import { useCallback, useState } from 'react';
 import {
   Image,
+  Platform,
+  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +38,6 @@ import {
 import { useAsyncData } from '@/hooks';
 import { pickAndUploadImage } from '@/services';
 import { colors, fontSize, radius, spacing } from '@/theme';
-import { isoDate } from '@/utils/validation';
 import type { ContractsStackParamList } from '../navigation/types';
 
 type RouteT = RouteProp<ContractsStackParamList, 'ContractDetail'>;
@@ -77,6 +79,7 @@ function formatDate(dateStr?: string): string {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   });
 }
 
@@ -100,8 +103,20 @@ export default function ContractDetailScreen() {
   const [showTermsForm, setShowTermsForm] = useState(false);
   const [termsSalary, setTermsSalary] = useState('');
   const [termsCurrency, setTermsCurrency] = useState('USD');
-  const [termsStartDate, setTermsStartDate] = useState('');
+  const [termsStartDate, setTermsStartDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [termsDuration, setTermsDuration] = useState('');
+
+  const handleDateChange = (selectedDate: Date) => {
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    setTermsStartDate(selectedDate);
+  };
+
+  /** Formats a Date as YYYY-MM-DD in UTC (what the API expects). */
+  const toISODateString = (d: Date | null): string => {
+    if (!d) return '';
+    return d.toISOString().split('T')[0];
+  };
 
   // Comment form
   const [commentBody, setCommentBody] = useState('');
@@ -183,20 +198,20 @@ export default function ContractDetailScreen() {
       showAlert('Error', 'Ingresa un salario válido.');
       return;
     }
-    const dateError = isoDate()(termsStartDate.trim());
-    if (!termsStartDate.trim() || dateError) {
-      showAlert('Error', dateError ?? 'La fecha de inicio es requerida (AAAA-MM-DD).');
+    if (!termsStartDate) {
+      showAlert('Error', 'Selecciona una fecha de inicio.');
       return;
     }
     if (!termsDuration.trim()) {
       showAlert('Error', 'La duración es requerida.');
       return;
     }
+    const startDateStr = toISODateString(termsStartDate);
     runAction('terms', async () => {
       await contractsApi.setContractTerms(contractId, {
         salary,
         currency: termsCurrency || 'USD',
-        startDate: termsStartDate.trim(),
+        startDate: startDateStr,
         duration: termsDuration.trim(),
       });
       setShowTermsForm(false);
@@ -410,7 +425,7 @@ export default function ContractDetailScreen() {
               />
               <Text style={styles.termLabel}>Inicio</Text>
               <Text style={styles.termValue}>
-                {contract.startDate ?? '—'}
+                {formatDate(contract.startDate)}
               </Text>
             </View>
             <View style={styles.termItem}>
@@ -449,19 +464,86 @@ export default function ContractDetailScreen() {
               onChangeText={setTermsSalary}
               required
             />
-            <AppInput
-              label="Moneda"
-              placeholder="USD"
-              value={termsCurrency}
-              onChangeText={setTermsCurrency}
-            />
-            <AppInput
-              label="Fecha de inicio"
-              placeholder="YYYY-MM-DD"
-              value={termsStartDate}
-              onChangeText={setTermsStartDate}
-              required
-            />
+            <View>
+              <Text style={styles.fieldLabel}>Moneda</Text>
+              <View style={styles.currencyRow}>
+                {(['USD', 'DOP'] as const).map((cur) => (
+                  <Pressable
+                    key={cur}
+                    style={[
+                      styles.currencyOption,
+                      termsCurrency === cur && styles.currencyOptionActive,
+                    ]}
+                    onPress={() => setTermsCurrency(cur)}
+                  >
+                    <Text
+                      style={[
+                        styles.currencyText,
+                        termsCurrency === cur && styles.currencyTextActive,
+                      ]}
+                    >
+                      {cur === 'USD' ? '🇺🇸 USD' : '🇩🇴 DOP'}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            <View>
+              <Text style={styles.fieldLabel}>Fecha de inicio *</Text>
+              <Pressable
+                style={styles.dateButton}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                <Text
+                  style={[
+                    styles.dateButtonText,
+                    !termsStartDate && styles.dateButtonPlaceholder,
+                  ]}
+                >
+                  {termsStartDate
+                    ? termsStartDate.toLocaleDateString('es-DO', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        timeZone: 'UTC',
+                      })
+                    : 'Seleccionar fecha'}
+                </Text>
+              </Pressable>
+              {showDatePicker && Platform.OS !== 'web' && (
+                <DateTimePicker
+                  value={termsStartDate ?? new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
+                  minimumDate={new Date()}
+                  onValueChange={handleDateChange}
+                  onDismiss={() => setShowDatePicker(false)}
+                />
+              )}
+              {Platform.OS === 'web' && (
+                <input
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={termsStartDate ? toISODateString(termsStartDate) : ''}
+                  onChange={(e: any) => {
+                    const val = e.target.value;
+                    if (val) {
+                      const [y, m, d] = val.split('-').map(Number);
+                      setTermsStartDate(new Date(Date.UTC(y, m - 1, d)));
+                    }
+                  }}
+                  style={{
+                    fontSize: 16,
+                    padding: 10,
+                    borderRadius: 8,
+                    border: '1px solid #ddd',
+                    marginTop: 4,
+                    width: '100%',
+                  }}
+                />
+              )}
+            </View>
             <AppInput
               label="Duración"
               placeholder="Ej: 3 meses"
@@ -918,6 +1000,55 @@ const styles = StyleSheet.create({
   formButtons: {
     gap: spacing.sm,
     marginTop: spacing.sm,
+  },
+  fieldLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  dateButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+  },
+  dateButtonPlaceholder: {
+    color: colors.disabled,
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  currencyOption: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+  },
+  currencyOptionActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  currencyText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  currencyTextActive: {
+    color: colors.textInverse,
   },
 
   /* Comments */
