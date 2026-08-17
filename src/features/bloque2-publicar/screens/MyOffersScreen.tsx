@@ -168,16 +168,28 @@ export default function MyOffersScreen() {
                 </View>
               </View>
 
-              {active ? (
+              <View style={styles.cardActions}>
                 <AppButton
-                  title="Desactivar"
-                  onPress={() => setPendingOffer(item)}
-                  variant="secondary"
+                  title="Ver aplicantes"
+                  onPress={() =>
+                    (navigation as any).navigate('ContractsTab', {
+                      screen: 'ApplicantsList',
+                      params: { offerId: item.id },
+                    })
+                  }
                   fullWidth={false}
                   disabled={working}
-                  style={styles.cardAction}
                 />
-              ) : null}
+                {active ? (
+                  <AppButton
+                    title="Desactivar"
+                    onPress={() => setPendingOffer(item)}
+                    variant="secondary"
+                    fullWidth={false}
+                    disabled={working}
+                  />
+                ) : null}
+              </View>
             </Card>
           );
         }}
@@ -273,8 +285,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.textMuted,
   },
-  cardAction: {
-    alignSelf: 'flex-start',
+  cardActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   footer: {
     padding: spacing.lg,

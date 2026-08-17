@@ -25,11 +25,10 @@ import { AppButton, Card, ConfirmDialog, ErrorMessage, Loader, Screen } from '@/
 import { useAsyncData } from '@/hooks';
 import { colors, fontSize, radius, spacing } from '@/theme';
 import type { ContractsStackParamList } from '../navigation/types';
+import { formatDate } from '@/features/bloque2-publicar/utils';
 
 type Nav = NativeStackNavigationProp<ContractsStackParamList, 'ApplicantDetail'>;
 type RouteT = RouteProp<ContractsStackParamList, 'ApplicantDetail'>;
-
-/* ---- Helpers ---- */
 
 function statusColor(status?: string): string {
   switch (status) {
@@ -60,8 +59,6 @@ function statusLabel(status?: string): string {
       return status ?? '—';
   }
 }
-
-/* ---- Star Rating component ---- */
 
 function StarRating({
   value,
@@ -101,8 +98,6 @@ const starStyles = StyleSheet.create({
   },
 });
 
-/* ---- Screen ---- */
-
 export default function ApplicantDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteT>();
@@ -122,7 +117,7 @@ export default function ApplicantDetailScreen() {
     destructive?: boolean;
     onConfirm: () => void;
     onCancel?: () => void;
-  }>({ visible: false, title: '', onConfirm: () => {} });
+  }>({ visible: false, title: '', onConfirm: () => { } });
 
   // Fetch all applications for the offer and find the one we need.
   // There's no single-application endpoint in the API.
@@ -141,8 +136,6 @@ export default function ApplicantDetailScreen() {
   useEffect(() => {
     if (application?.rating) setLocalRating(application.rating);
   }, [application?.rating]);
-
-  /* ---- Actions ---- */
 
   const handleRate = useCallback(
     async (rating: number) => {
@@ -210,8 +203,6 @@ export default function ApplicantDetailScreen() {
     [applicationId, reload, navigation],
   );
 
-  /* ---- Render ---- */
-
   if (loading) return <Loader message="Cargando aplicante…" />;
   if (error) return <ErrorMessage error={error} onRetry={reload} fullScreen />;
   if (!application) {
@@ -236,7 +227,6 @@ export default function ApplicantDetailScreen() {
         />
       }
     >
-      {/* ---- Applicant header ---- */}
       <View style={styles.header}>
         <Ionicons
           name="person-circle-outline"
@@ -261,7 +251,6 @@ export default function ApplicantDetailScreen() {
         </View>
       </View>
 
-      {/* ---- Comment ---- */}
       <Card>
         <Text style={styles.sectionTitle}>Comentario</Text>
         <Text style={styles.commentText}>
@@ -269,7 +258,6 @@ export default function ApplicantDetailScreen() {
         </Text>
       </Card>
 
-      {/* ---- Answers ---- */}
       {application.answers && application.answers.length > 0 && (
         <Card>
           <Text style={styles.sectionTitle}>Respuestas</Text>
@@ -292,7 +280,6 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Rating ---- */}
       <Card>
         <Text style={styles.sectionTitle}>Calificación</Text>
         <StarRating
@@ -305,10 +292,8 @@ export default function ApplicantDetailScreen() {
         )}
       </Card>
 
-      {/* ---- Action error ---- */}
       {actionError ? <ErrorMessage error={actionError} /> : null}
 
-      {/* ---- Action buttons (only if not resolved) ---- */}
       {!isResolved && (
         <Card>
           <Text style={styles.sectionTitle}>Acciones</Text>
@@ -342,7 +327,6 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Winner → link to contract ---- */}
       {application.status === 'winner' && application.contractId && (
         <Card>
           <View style={styles.winnerInfo}>
@@ -363,16 +347,8 @@ export default function ApplicantDetailScreen() {
         </Card>
       )}
 
-      {/* ---- Date ---- */}
       <Text style={styles.dateText}>
-        Aplicó el{' '}
-        {application.createdAt
-          ? new Date(application.createdAt).toLocaleDateString('es-DO', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })
-          : '—'}
+        Aplicó el {formatDate(application.createdAt)}
       </Text>
 
       <ConfirmDialog
@@ -388,8 +364,6 @@ export default function ApplicantDetailScreen() {
     </Screen>
   );
 }
-
-/* ---- Styles ---- */
 
 const styles = StyleSheet.create({
   header: {

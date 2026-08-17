@@ -61,6 +61,17 @@ function applicationStatusLabel(status?: string): string {
   }
 }
 
+/** Formats ISO dates ignoring local timezone shifts */
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('es-DO', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /** Estrellas de solo lectura para la lista. */
 function StarDisplay({ rating }: { rating?: number }) {
   if (!rating) return null;
@@ -140,9 +151,7 @@ export default function ApplicantsListScreen() {
         <View style={styles.cardFooter}>
           <StarDisplay rating={item.rating} />
           <Text style={styles.date}>
-            {item.createdAt
-              ? new Date(item.createdAt).toLocaleDateString('es-DO')
-              : ''}
+            {item.createdAt ? formatDate(item.createdAt) : ''}
           </Text>
         </View>
       </Card>
